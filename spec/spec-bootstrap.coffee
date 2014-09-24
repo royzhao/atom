@@ -1,6 +1,11 @@
 # Start the crash reporter before anything else.
 require('crash-reporter').start(productName: 'Atom', companyName: 'GitHub')
 
+if process.env.JANKY_SHA1
+  # No point in tracking deprecations on CI since they aren't actually used
+  # to fail the build or logged to standard output.
+  require('grim').deprecate = ->
+
 path = require 'path'
 
 try
