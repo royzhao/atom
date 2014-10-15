@@ -191,9 +191,9 @@ TextEditorComponent = React.createClass
     @checkForVisibilityChange()
 
   componentWillUnmount: ->
-    {editor, parentView} = @props
+    {editor, hostElement} = @props
 
-    parentView.__spacePenView.trigger 'editor:will-be-removed', [parentView.__spacePenView]
+    hostElement.__spacePenView.trigger 'editor:will-be-removed', [hostElement.__spacePenView]
     @unsubscribe()
     window.removeEventListener 'resize', @requestHeightAndWidthMeasurement
     clearInterval(@domPollingIntervalId)
@@ -212,9 +212,9 @@ TextEditorComponent = React.createClass
     if @props.editor.isAlive()
       @updateParentViewFocusedClassIfNeeded(prevState)
       @updateParentViewMiniClassIfNeeded(prevState)
-      @props.parentView.__spacePenView.trigger 'cursor:moved' if cursorMoved
-      @props.parentView.__spacePenView.trigger 'selection:changed' if selectionChanged
-      @props.parentView.__spacePenView.trigger 'editor:display-updated'
+      @props.hostElement.__spacePenView.trigger 'cursor:moved' if cursorMoved
+      @props.hostElement.__spacePenView.trigger 'selection:changed' if selectionChanged
+      @props.hostElement.__spacePenView.trigger 'editor:display-updated'
 
   becameVisible: ->
     @updatesPaused = true
@@ -255,7 +255,7 @@ TextEditorComponent = React.createClass
         @forceUpdate()
 
   getTopmostDOMNode: ->
-    @props.parentView
+    @props.hostElement
 
   getRenderedRowRange: ->
     {editor, lineOverdrawMargin} = @props
@@ -756,10 +756,10 @@ TextEditorComponent = React.createClass
   measureHeightAndWidth: ->
     return unless @isMounted()
 
-    {editor, parentView} = @props
+    {editor, hostElement} = @props
     scrollViewNode = @refs.scrollView.getDOMNode()
-    {position} = getComputedStyle(parentView)
-    {height} = parentView.style
+    {position} = getComputedStyle(hostElement)
+    {height} = hostElement.style
 
     if position is 'absolute' or height
       if @autoHeight
@@ -791,9 +791,9 @@ TextEditorComponent = React.createClass
       @remeasureCharacterWidths()
 
   sampleBackgroundColors: (suppressUpdate) ->
-    {parentView} = @props
+    {hostElement} = @props
     {showLineNumbers} = @state
-    {backgroundColor} = getComputedStyle(parentView)
+    {backgroundColor} = getComputedStyle(hostElement)
 
     if backgroundColor isnt @backgroundColor
       @backgroundColor = backgroundColor
@@ -962,11 +962,13 @@ TextEditorComponent = React.createClass
 
   updateParentViewFocusedClassIfNeeded: (prevState) ->
     if prevState.focused isnt @state.focused
-      @props.parentView.classList.toggle('is-focused', @state.focused)
+      @props.hostElement.classList.toggle('is-focused', @state.focused)
+      @props.rootElement.classList.toggle('is-focused', @state.focused)
 
   updateParentViewMiniClassIfNeeded: (prevProps) ->
     if prevProps.mini isnt @props.mini
-      @props.parentView.classList.toggle('mini', @props.mini)
+      @props.hostElement.classList.toggle('mini', @props.mini)
+      @props.rootElement.classList.toggle('mini', @props.mini)
 
   runScrollBenchmark: ->
     unless process.env.NODE_ENV is 'production'
