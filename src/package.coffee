@@ -34,6 +34,7 @@ class Package
   keymaps: null
   menus: null
   stylesheets: null
+  stylesheetDisposables: null
   grammars: null
   scopedProperties: null
   mainModulePath: null
@@ -46,7 +47,6 @@ class Package
 
   constructor: (@path, @metadata) ->
     @emitter = new Emitter
-    @stylesheetDisposables = new CompositeDisposable
     @metadata ?= Package.loadMetadata(@path)
     @name = @metadata?.name ? path.basename(@path)
     ModuleCache.add(@path, @metadata)
@@ -161,8 +161,9 @@ class Package
 
     context = 'atom-text-editor' if @metadata.theme is 'syntax'
     group = @getStylesheetType()
+    @stylesheetDisposables = new CompositeDisposable
     for [sourcePath, source] in @stylesheets
-      @stylesheetDisposables.add(atom.styles.addStyleSheet(source, {sourcePath, sourcePath, context}))
+      @stylesheetDisposables.add(atom.styles.addStyleSheet(source, {sourcePath, group, context}))
     @stylesheetsActivated = true
 
   activateResources: ->
@@ -299,7 +300,7 @@ class Package
   deactivateResources: ->
     grammar.deactivate() for grammar in @grammars
     scopedProperties.deactivate() for scopedProperties in @scopedProperties
-    atom.themes.removeStylesheet(stylesheetPath) for [stylesheetPath] in @stylesheets
+    @stylesheetDisposables?.dispose()
     @activationDisposables?.dispose()
     @stylesheetsActivated = false
     @grammarsActivated = false
